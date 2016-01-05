@@ -11,80 +11,91 @@ describe CarrierWave::Uploader do
   end
 
   describe '#cache!' do
-
     before do
       allow(CarrierWave).to receive(:generate_cache_id).and_return('1369894322-345-1234-2255')
     end
 
-    it "should not raise an integrity error if there is no blacklist" do
-      allow(@uploader).to receive(:extension_blacklist).and_return(nil)
-      expect(running {
-        @uploader.cache!(File.open(file_path('test.jpg')))
-      }).not_to raise_error
+    context "when there is no blacklist" do
+      it "does not raise an integrity error if there is no blacklist" do
+        allow(@uploader).to receive(:extension_blacklist).and_return(nil)
+        expect(running {
+          @uploader.cache!(File.open(file_path('test.jpg')))
+        }).not_to raise_error
+      end
     end
 
-    it "should raise an integrity error if there is a blacklist and the file is on it" do
-      allow(@uploader).to receive(:extension_blacklist).and_return(%w(jpg gif png))
-      expect(running {
-        @uploader.cache!(File.open(file_path('test.jpg')))
-      }).to raise_error(CarrierWave::IntegrityError)
-    end
+    context "when there is a blacklist" do
+      it "should raise an integrity error if there is a blacklist and the file is on it" do
+        allow(@uploader).to receive(:extension_blacklist).and_return(%w(jpg gif png))
 
-    it "should not raise an integrity error if there is a blacklist and the file is not on it" do
-      allow(@uploader).to receive(:extension_blacklist).and_return(%w(txt doc xls))
-      expect(running {
-        @uploader.cache!(File.open(file_path('test.jpg')))
-      }).not_to raise_error
-    end
+        expect(running {
+          @uploader.cache!(File.open(file_path('test.jpg')))
+        }).to raise_error(CarrierWave::IntegrityError)
+      end
 
-    it "should not raise an integrity error if there is a blacklist and the file is not on it, using start of string matcher" do
-      allow(@uploader).to receive(:extension_blacklist).and_return(%w(txt))
-      expect(running {
-        @uploader.cache!(File.open(file_path('bork.ttxt')))
-      }).not_to raise_error
-    end
+      it "does not raise an integrity error if there is a blacklist and the file is not on it" do
+        allow(@uploader).to receive(:extension_blacklist).and_return(%w(txt doc xls))
 
-    it "should not raise an integrity error if there is a blacklist and the file is not on it, using end of string matcher" do
-      allow(@uploader).to receive(:extension_blacklist).and_return(%w(txt))
-      expect(running {
-        @uploader.cache!(File.open(file_path('bork.txtt')))
-      }).not_to raise_error
-    end
+        expect(running {
+          @uploader.cache!(File.open(file_path('test.jpg')))
+        }).not_to raise_error
+      end
 
-    it "should compare blacklist in a case insensitive manner when capitalized extension provided" do
-      allow(@uploader).to receive(:extension_blacklist).and_return(%w(jpg gif png))
-      expect(running {
-        @uploader.cache!(File.open(file_path('case.JPG')))
-      }).to raise_error(CarrierWave::IntegrityError)
-    end
+      it "does not raise an integrity error if there is a blacklist and the file is not on it, using start of string matcher" do
+        allow(@uploader).to receive(:extension_blacklist).and_return(%w(txt))
 
-    it "should compare blacklist in a case insensitive manner when lowercase extension provided" do
-      allow(@uploader).to receive(:extension_blacklist).and_return(%w(JPG GIF PNG))
-      expect(running {
-        @uploader.cache!(File.open(file_path('test.jpg')))
-      }).to raise_error(CarrierWave::IntegrityError)
-    end
+        expect(running {
+          @uploader.cache!(File.open(file_path('bork.ttxt')))
+        }).not_to raise_error
+      end
 
-    it "should accept and check regular expressions" do
-      allow(@uploader).to receive(:extension_blacklist).and_return([/jpe?g/, 'gif', 'png'])
-      expect(running {
-        @uploader.cache!(File.open(file_path('test.jpeg')))
-      }).to raise_error(CarrierWave::IntegrityError)
-    end
+      it "does not raise an integrity error if there is a blacklist and the file is not on it, using end of string matcher" do
+        allow(@uploader).to receive(:extension_blacklist).and_return(%w(txt))
 
-    it "accepts a single extension string value" do
-      allow(@uploader).to receive(:extension_whitelist).and_return('jpeg')
-      expect(running {
-        @uploader.cache!(File.open(file_path('test.jpeg')))
-      }).not_to raise_error
-    end
+        expect(running {
+          @uploader.cache!(File.open(file_path('bork.txtt')))
+        }).not_to raise_error
+      end
 
-    it "accepts a single extension regular expression value" do
-      allow(@uploader).to receive(:extension_whitelist).and_return(/jpe?g/)
-      expect(running {
-        @uploader.cache!(File.open(file_path('test.jpeg')))
-      }).not_to raise_error
+      it "compares blacklist in a case insensitive manner when capitalized extension provided" do
+        allow(@uploader).to receive(:extension_blacklist).and_return(%w(jpg gif png))
+
+        expect(running {
+          @uploader.cache!(File.open(file_path('case.JPG')))
+        }).to raise_error(CarrierWave::IntegrityError)
+      end
+
+      it "compares blacklist in a case insensitive manner when lowercase extension provided" do
+        allow(@uploader).to receive(:extension_blacklist).and_return(%w(JPG GIF PNG))
+
+        expect(running {
+          @uploader.cache!(File.open(file_path('test.jpg')))
+        }).to raise_error(CarrierWave::IntegrityError)
+      end
+
+      it "accepts and check regular expressions" do
+        allow(@uploader).to receive(:extension_blacklist).and_return([/jpe?g/, 'gif', 'png'])
+
+        expect(running {
+          @uploader.cache!(File.open(file_path('test.jpeg')))
+        }).to raise_error(CarrierWave::IntegrityError)
+      end
+
+      it "accepts a single extension string value" do
+        allow(@uploader).to receive(:extension_whitelist).and_return('jpeg')
+
+        expect(running {
+          @uploader.cache!(File.open(file_path('test.jpeg')))
+        }).not_to raise_error
+      end
+
+      it "accepts a single extension regular expression value" do
+        allow(@uploader).to receive(:extension_whitelist).and_return(/jpe?g/)
+
+        expect(running {
+          @uploader.cache!(File.open(file_path('test.jpeg')))
+        }).not_to raise_error
+      end
     end
   end
-
 end
